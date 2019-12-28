@@ -105,6 +105,13 @@ class dom_tag(object):
     if args:
       self.add(*args)
 
+    minimized_attributes = kwargs.pop('_', [])
+    if isinstance(minimized_attributes, str):
+        minimized_attributes = [minimized_attributes]
+
+    for attr in minimized_attributes:
+      self.set_attribute(*type(self).clean_pair(attr, None))
+
     for attr, value in kwargs.items():
       self.set_attribute(*type(self).clean_pair(attr, value))
 
@@ -343,7 +350,9 @@ class dom_tag(object):
     sb.append(name)
 
     for attribute, value in sorted(self.attributes.items()):
-      if value is not False: # False values must be omitted completely
+      if value is None:
+          sb.append(' ' + attribute)
+      elif value is not False: # False values must be omitted completely
           sb.append(' %s="%s"' % (attribute, escape(unicode(value), True)))
 
     sb.append(' />' if self.is_single and xhtml else '>')
