@@ -60,6 +60,9 @@ class dom_tag(object):
   # Replace underscores in tag name with hyphens
   hyphenate_tagname = False
 
+  # Patterns of attribute names to hyphenate
+  hyphenate_attribute_prefixes = set()
+
   frame = namedtuple('frame', ['tag', 'items', 'used'])
 
   def __new__(_cls, *args, **kwargs):
@@ -388,7 +391,7 @@ class dom_tag(object):
 
 
   @staticmethod
-  def clean_attribute(attribute):
+  def clean_attribute(attribute, hyphenate_prefixes=None):
     '''
     Normalize attribute names for shorthand and work arounds for limitations
     in Python's syntax
@@ -409,7 +412,8 @@ class dom_tag(object):
       attribute = attribute[1:]
 
     # Workaround for dash
-    if attribute in set(['http_equiv']) or attribute.startswith('data_'):
+    if attribute in set(['http_equiv']) or any([attribute.startswith(prefix)
+        for prefix in ('_data',) + (hyphenate_prefixes or tuple())]):
       attribute = attribute.replace('_', '-').lower()
 
     # Workaround for colon
@@ -427,7 +431,7 @@ class dom_tag(object):
 
     Ex. input(selected=True) is equivalent to input(selected="selected")
     '''
-    attribute = cls.clean_attribute(attribute)
+    attribute = cls.clean_attribute(attribute, cls.hyphenate_attribute_prefixes)
 
     # Check for boolean attributes
     # (i.e. selected=True becomes selected="selected")
